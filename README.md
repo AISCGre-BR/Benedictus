@@ -9,6 +9,7 @@
 ### Future goals
 
 - Support more advanced gregorio features, especially NABC editing, for both simplex and triplex notation.
+- Support for chord insertion (current software)
 
 ### Reference photo
 
