@@ -1,118 +1,73 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>GABC Editor</title>
-  <link rel="stylesheet" type="text/css" href="css/smoothness/jquery-ui-1.10.3.custom.min.css" />
-  <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
-  <link rel="stylesheet" type="text/css" href="style.css" />
-  <script src="js/jquery.min.js" type="text/javascript"></script>
-  <script src="js/jquery-ui-1.10.3.custom.min.js" type="text/javascript"></script>
-  <script src="js/util.js" type="text/javascript"></script>
-  <script src="js/exsurge.min.js"></script>
-  <script src="js/saveSvgAsPng.js"></script>
-  <script src="js/editor.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const hash = window.location.hash;
-      if (hash.startsWith('#gabc=')) {
-        const gabcContent = hash.substring('#gabc='.length);
-        const editor = document.getElementById('editor');
-        if (editor) {
-          editor.value = decodeURIComponent(gabcContent);
-          updateEditor();
-        }
+  <head>
+    <meta charset="UTF-8">
+    <title>Benedictus - LaTeX to SVG</title>
+    <!-- Content Security Policy is important for Electron apps -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; img-src 'self' file: data:;">
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        padding: 20px;
+        background-color: #f0f0f0;
       }
-    });
-  </script>
-</head>
-<body class='sans' style='overflow:hidden;padding: 8px'>
-<style>
-textarea{
-  padding:0px;
-}
-.dp{
-  padding-right:16px;
-}
-.tap{
-  padding-right:2px;
-}
-td{
-  padding:0px;
-}
-#chant-parent2{
-  width:10.3in;
-  max-width:100%;
-  margin:auto;
-  height:100%;
-}
-#chant-parent{
-  border:1px solid #aaa;
-  overflow-y:auto;
-  height:100%;
-}
-#chant-pad{
-  padding:0 0.1in;
-}
-#chant-preview{
-  margin:0.1in auto auto;
-}
-textarea{
-  resize:none;
-}
-/* Style for the selected chord */
-.selected-chord {
-    filter: url(#text-glow);
-    cursor: move;
-}
-</style>
-<div style="width:100%;margin-bottom:5px">
-  <label for="editor" title="Enter GABC notation here.">GABC Editor</label>
-  <button id="insert-separator-button" class="btn btn-primary">Separar notas</button>
-  <button id="insert-chord-button" class="btn btn-default">Inserir acorde</button>
-  <button id="remove-chord-button" class="btn btn-default">Remover acorde</button>
-  <label style="margin-left: 15px; font-weight: normal; vertical-align: middle;">
-    <input type="checkbox" id="include-hspace-checkbox" checked> Incluir \hspace
-  </label>
-  <button onclick="window.open('https:/\/editor.sourceandsummit.com/legacy/#annotation%3A%20%0A%25%25%0A' + encodeURIComponent(document.getElementById('editor').value), '_blank')" style="margin-left:20px;">Abrir em Illuminare</button>
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      input {
+        padding: 8px;
+        font-size: 16px;
+        width: 300px;
+        margin-right: 10px;
+      }
+      button {
+        padding: 8px 16px;
+        font-size: 16px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:disabled {
+        background-color: #ccc;
+      }
+      #status {
+        margin-top: 10px;
+        color: #666;
+        font-style: italic;
+      }
+      #result {
+        margin-top: 20px;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>TeX to SVG Converter</h1>
+      <p>Enter the filename (without extension, expected in current directory):</p>
+      
+      <div>
+        <input type="text" id="filenameInput" placeholder="e.g. myscore" />
+        <button id="processBtn">Process</button>
+      </div>
 
-  <br><div class="tap"><textarea id="editor" spellcheck="false" style="height: 130pt; width: 100%;">
-%%
-(c3) Ky(d)ri(gxfgh)e(hivhgh) (/kvIHGhih) (,) e(gxhvFEDgf)lé(e)i(e)son.(d) (::Z)
-Chri(f)ste(fvEDCdgxd!fg!hvivHGh) (,) e(gxhvFEDgf)lé(e)i(e)son.(d) (::Z)
-Ký(k)ri(j)e(kvJIjkhgxkhiv/fg!hv) (,) e(gxhvFEDgf)lé(e)i(e)son.(d) (::Z)
-Ký(k)ri(j)e(kvJIjkh) (,) (kjkvJIjkhgxkhiv/fg!hv) (,) e(gxhvFEDgf)lé(e)i(e)son.(d) (::Z)
-  </textarea></div>
-</div>
-<div id="chant-parent2">
-  <div id="chant-parent">
-    <div id="chant-pad">
-      <div id="chant-preview" class="clickable"></div>
+      <div id="status"></div>
+      
+      <div id="result">
+        <!-- SVG will appear here -->
+      </div>
     </div>
-  </div>
-</div>
-  <svg class="bg-blur">
-  <defs>
-    <filter id="text-glow" x="-100%" y="-100%" width="300%" height="300%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="5 5" result="glow"/>
-      <feFlood flood-color="#337ab7" result="COLOR" />
-      <feComposite in="COLOR" in2="glow" operator="in" result="glow-color" />
-      <feMerge>
-        <feMergeNode in="glow-color"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-    <filter id="note-glow" x="-150%" y="-150%" width="400%" height="400%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="5 5" result="glow"/>
-      <feFlood flood-color="#337ab7" result="COLOR" />
-      <feComposite in="COLOR" in2="glow" operator="in" result="glow-color" />
-      <feMerge>
-        <feMergeNode in="glow-color"/>
-        <feMergeNode in="glow-color"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-  </defs>
-  </svg>
 
-</body>
+    <!-- Load the renderer script -->
+    <script src="./dist/renderer.js"></script>
+  </body>
 </html>
