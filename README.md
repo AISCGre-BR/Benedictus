@@ -15,3 +15,20 @@
 
 ![Reference photo](reference.png)
 
+
+### Development
+
+This project uses Typescript + Vue, inside Electron.
+
+Bun is used for the typescript implementation
+
+With bun installed in your system, run:
+
+```bash
+bun install
+```
+and when you want to open the UI, run:
+```bash
+bun start
+```
+This will automatically clean up, build and open the electron app
