@@ -17,7 +17,7 @@ function createWindow() {
     },
   });
 
-  mainWindow.loadFile(path.join(__dirname, '../index.html'));
+  mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   // mainWindow.webContents.openDevTools();
 }
 
@@ -69,5 +69,21 @@ ipcMain.handle('process-file', async (event, filename: string) => {
   } catch (error: any) {
     console.error('Error processing file:', error);
     return { success: false, error: error.message || 'Unknown error' };
+  }
+});
+
+ipcMain.handle('check-file', async (event, filename: string) => {
+  try {
+    const baseName = path.parse(filename).name;
+    const cwd = process.cwd();
+    const svgPath = path.join(cwd, `${baseName}.svg`);
+
+    if (fs.existsSync(svgPath)) {
+      return { success: true, filePath: svgPath, timestamp: fs.statSync(svgPath).mtimeMs };
+    } else {
+      return { success: false, error: 'File not found' };
+    }
+  } catch (error: any) {
+    return { success: false, error: error.message };
   }
 });

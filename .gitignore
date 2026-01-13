@@ -1,2 +1,5 @@
-test.*
+*.aux
+*.gaux
+*.log
+
 node_modules/

@@ -58,7 +58,7 @@ function createWindow() {
             contextIsolation: true,
         },
     });
-    mainWindow.loadFile(path.join(__dirname, '../index.html'));
+    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
     // mainWindow.webContents.openDevTools();
 }
 electron_1.app.whenReady().then(() => {
@@ -101,5 +101,21 @@ electron_1.ipcMain.handle('process-file', (event, filename) => __awaiter(void 0,
     catch (error) {
         console.error('Error processing file:', error);
         return { success: false, error: error.message || 'Unknown error' };
+    }
+}));
+electron_1.ipcMain.handle('check-file', (event, filename) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const baseName = path.parse(filename).name;
+        const cwd = process.cwd();
+        const svgPath = path.join(cwd, `${baseName}.svg`);
+        if (fs.existsSync(svgPath)) {
+            return { success: true, filePath: svgPath, timestamp: fs.statSync(svgPath).mtimeMs };
+        }
+        else {
+            return { success: false, error: 'File not found' };
+        }
+    }
+    catch (error) {
+        return { success: false, error: error.message };
     }
 }));
